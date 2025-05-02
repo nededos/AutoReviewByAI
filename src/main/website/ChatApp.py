@@ -1,5 +1,4 @@
 import os
-import PyPDF2
 import openai
 from openai import OpenAI
 from dotenv import load_dotenv, find_dotenv
@@ -15,15 +14,13 @@ temperature = 0.3
 max_tokens = 500
 topic = ""
 
-# prompts
-prompts = prompts.generate_prompt("Inception")
-messages = [
-    {"role": "system", "content": "You are a helpful assistant."},
-    {"role": "user", "content": prompts},
-]
-
 # function
-def getReview():
+def getReview(movieTitle):
+    prompts = prompts.generate_prompt(movieTitle)
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": prompts},
+    ]
     completion = openai.chat.completions.create(
         model=model,
         messages=messages,
