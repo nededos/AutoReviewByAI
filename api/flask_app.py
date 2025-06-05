@@ -10,11 +10,16 @@ from celery import Celery
 import requests
 import openai
 import json
+from models import db, Movie, Review, User
+from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 from dotenv import load_dotenv
 from models import db, Movie, Review
 
 load_dotenv()
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['JWT_SECRET_KEY'] = 'super-secret'
 
 celery = Celery(__name__)
 
@@ -109,6 +114,32 @@ def create_app() -> Flask:
             if movie_data:
                 return test_combined(tmdb_id)
         return jsonify({"error": "Nie udało się znaleźć filmu"}), 404
+    
+    @app.route('/api/login', methods=['POST'])
+    def login():
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        user = User.query.filter_by(username=email).first()
+        if user and user.password == password:
+            token = create_access_token(identity=str(user.id))
+            return jsonify(access_token=token), 200
+        return jsonify(message='Invalid credentials'), 401
+
+
+    @app.route('/api/register', methods=['POST'])
+    def register():
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify(message='Email and password are required'), 400
+        if User.query.filter_by(username=email).first():
+            return jsonify(message='User already exists'), 400
+        new_user = User(username=email, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(message='User registered successfully'), 201
 
     return app
 
@@ -246,6 +277,9 @@ def generate_review(movie_db_id: int):
         return review.id
 
 
+
+
+
 ###############################################################################
 # Entry‑point (dev only)
 ###############################################################################
@@ -253,6 +287,7 @@ def generate_review(movie_db_id: int):
 
 if __name__ == "__main__":
     app = create_app()
+    JWTManager(app)
     with app.app_context():
         Path("./migrations").mkdir(exist_ok=True)
         db.create_all()

@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 export default function DriveReview() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [comment, setComment] = useState("");
 
   const fetchReview = async () => {
     setLoading(true);
@@ -23,6 +24,37 @@ export default function DriveReview() {
       setLoading(false);
     }
   };
+
+  const saveComment = async () => {
+    if (!data || !data.movie || !data.movie.tmdb_id) {
+      alert("Brak wybranego filmu.");
+      return;
+    }
+    if (!comment.trim()) {
+      alert("Komentarz nie może być pusty.");
+      return;
+    }
+    try {
+      const response = await fetch(`http://localhost:8000/api/movies/${data.movie.tmdb_id}/comment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ comment }),
+      });
+      if (response.ok) {
+        alert("Komentarz zapisany!");
+        setComment(""); // Wyczyść pole po zapisaniu
+      } else {
+        const res = await response.json();
+        alert("Błąd zapisu: " + (res.message || response.statusText));
+      }
+    } catch (e) {
+      alert("Błąd połączenia: " + e.message);
+    }
+  };
+
+
 
   const renderGenres = (genres) => genres.map((g, i) => (
     <span key={i} className="tag">
@@ -88,11 +120,12 @@ export default function DriveReview() {
               </motion.div>
 
               <div className="mt-6">
-                <Textarea placeholder="Napisz komentarz..." />
+                <Textarea placeholder="Napisz komentarz..."
+                  value={comment}
+                  onChange={e => setComment(e.target.value)} />
                 <div className="icons">
-                  <ThumbsUp />
-                  <Heart />
                 </div>
+                <Button className="mt-2" onClick={saveComment} variant="outline"> Dodaj komentarz </Button>
               </div>
             </div>
           </div>
