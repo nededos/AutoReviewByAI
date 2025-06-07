@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent } from "./components/ui/card";
 import { Button } from "./components/ui/button";
 import { Textarea } from "./components/ui/textarea";
-import { Heart, ThumbsUp } from "lucide-react";
+//import { Heart, ThumbsUp } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function DriveReview() {
@@ -67,9 +67,9 @@ export default function DriveReview() {
       <header>
         <h1 className="Title">Dzienny generator recenzji filmów z AI</h1>
         <nav className="NavBar">
-          <a href="#">Filmy</a>
-          <a href="#">Top</a>
-          <a href="#">Moje recenzje</a>
+          <a href="/movies">Filmy</a>
+          <a href="/top">Top</a>
+          <a href="/my-reviews">Moje recenzje</a>
         </nav>
       </header>
 
