@@ -21,6 +21,7 @@ const NavBar = () => {
         <ul className="nav-links">
           <li><Link to="/">Main Page</Link></li>
           <li><Link to="/filmy">Filmy</Link></li>
+          <li><Link to="/recenzja">Generuj</Link></li>
           {token ? (
             <>
               <li><button onClick={handleLogout}>Log Out</button></li>
