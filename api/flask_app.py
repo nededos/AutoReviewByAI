@@ -10,14 +10,14 @@ from celery import Celery
 import requests
 import openai
 import json
-from models import db, Movie, Review, User
+from models import db, Comment, User, Movie, Review
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 
 from dotenv import load_dotenv
-from models import db, Movie, Review
 
 load_dotenv()
 
+app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 app.config['JWT_SECRET_KEY'] = 'super-secret'
 
@@ -291,4 +291,5 @@ if __name__ == "__main__":
     with app.app_context():
         Path("./migrations").mkdir(exist_ok=True)
         db.create_all()
-    app.run(debug=True, port=8000)
+    app.run(debug=True, host='0.0.0.0', port=8000)
+

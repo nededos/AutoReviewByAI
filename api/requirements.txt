@@ -6,3 +6,4 @@ redis
 requests
 openai
 python-dotenv
+flask-jwt-extended

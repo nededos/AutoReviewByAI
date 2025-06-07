@@ -1,0 +1,26 @@
+services:
+  backend:
+    build: ./api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app
+    env_file:
+      - ./api/.env
+    depends_on:
+      - redis
+    restart: always
+
+  frontend:
+    build: ./auto_review_react-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./auto_review_react-app:/app
+    stdin_open: true
+    tty: true
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
