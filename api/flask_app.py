@@ -17,10 +17,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# app = Flask(__name__)
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-# app.config['JWT_SECRET_KEY'] = 'super-secret'
-
 celery = Celery(__name__)
 
 
@@ -55,6 +51,7 @@ def create_app() -> Flask:
     app = Flask(__name__)
 
     app.config.update(
+        JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super-secret-key"),
         SQLALCHEMY_DATABASE_URI=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         CELERY_BROKER_URL=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
@@ -68,9 +65,9 @@ def create_app() -> Flask:
 
     openai.api_key = app.config["OPENAI_API_KEY"]
 
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": "*"}})
     db.init_app(app)
-    global celery
+    global celerys
     celery = make_celery(app)
 
     @app.route("/api/health")
