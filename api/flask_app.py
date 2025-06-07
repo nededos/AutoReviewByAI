@@ -124,9 +124,17 @@ def create_app() -> Flask:
         return jsonify(message='Invalid credentials'), 401
 
     @app.route("/api/movies/<int:tmdb_id>/comments", methods=["GET"])
+    @jwt_required()
     def get_comments(tmdb_id):
+        user_id = get_jwt_identity()
         comments = Comment.query.filter_by(tmdb_id=tmdb_id).all()
-        return jsonify([{"content": c.content} for c in comments])
+        return jsonify([
+            {
+                "content": c.content,
+                "username": User.query.get(c.user_id).username if c.user_id else "Anonim"
+            }
+            for c in comments
+        ])
 
     @app.route("/api/movies/<int:tmdb_id>/comment", methods=["POST"])
     @jwt_required()
@@ -135,8 +143,8 @@ def create_app() -> Flask:
         comment_text = data.get("comment")
         if not comment_text:
             return jsonify({"message": "Komentarz nie może być pusty."}), 400
-
-        comment = Comment(tmdb_id=tmdb_id, content=comment_text)
+        user_id = get_jwt_identity()
+        comment = Comment(tmdb_id=tmdb_id, content=comment_text, user_id=user_id, movie_id=tmdb_id)
         db.session.add(comment)
         db.session.commit()
         return jsonify({"message": "Komentarz zapisany!"}), 201

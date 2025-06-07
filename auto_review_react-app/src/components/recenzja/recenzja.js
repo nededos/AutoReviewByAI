@@ -13,9 +13,14 @@ export default function DriveReview() {
   const [comments, setComments] = useState([]);
 
   const fetchComments = async (tmdb_id) => {
-    const res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}/comments`);
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}/comments`, {
+        headers: {
+        "Authorization": `Bearer ${token}`,
+        },
+    });
     const data = await res.json();
-    setComments(data);
+    setComments(Array.isArray(data) ? data : []);
   };
   
   const fetchReview = async () => {
@@ -63,6 +68,7 @@ export default function DriveReview() {
     if (response.ok) {
       alert("Komentarz zapisany!");
       setComment("");
+      fetchComments(data.movie.tmdb_id);
     } else {
       const res = await response.json();
       alert("Błąd zapisu: " + (res.message || response.statusText));
@@ -141,13 +147,12 @@ export default function DriveReview() {
                 <h4>Komentarze:</h4>
                 {comments.length === 0 && <p>Brak komentarzy.</p>}
                 <ul>
-                  {comments.map((c, i) => (
-                    <li key={i}>{c.content}</li>
-                  ))}
+                    {comments.map((c, i) => (
+                        <li key={i}>
+                        <strong>{c.username}:</strong> {c.content}
+                        </li>
+                    ))}
                 </ul>
-              </div>
-
-              <div className="mt-6">
                 <Textarea placeholder="Napisz komentarz..."
                   value={comment}
                   onChange={e => setComment(e.target.value)} />

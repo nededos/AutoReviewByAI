@@ -1,0 +1,5 @@
+.comments-section ul li {
+  word-break: break-word;
+  white-space: pre-line;
+  max-width: 100%;
+}
