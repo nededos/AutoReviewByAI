@@ -9,7 +9,7 @@ class Movie(db.Model):
     title = db.Column(db.String, nullable=False)
     poster_path = db.Column(db.String)
     release_date = db.Column(db.Date)
-    overview = db.Column(db.Text)
+    overview = db.Column(db.Text) 
 
     reviews = db.relationship("Review", backref="movie", lazy=True, cascade="all, delete-orphan")
 
@@ -59,8 +59,9 @@ class User(db.Model):
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    text = db.Column(db.String(500), nullable=False)
+    content = db.Column(db.String(500), nullable=False)
+    tmdb_id = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    film_id = db.Column(db.Integer, nullable=False)
+    movie_id = db.Column(db.Integer, nullable=False)
     user = db.relationship('User', backref=db.backref('comments', lazy=True))
 

@@ -11,13 +11,23 @@ export default function DriveReview() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
 
+  const fetchComments = async (tmdb_id) => {
+    const res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}/comments`);
+    const data = await res.json();
+    setComments(data);
+  };
+  
   const fetchReview = async () => {
     setLoading(true);
     try {
       const response = await fetch("http://localhost:8000/api/test-combined/random");
       const result = await response.json();
       setData(result);
+      if (result.movie?.tmdb_id) {
+        fetchComments(result.movie.tmdb_id);
+      }
     } catch (error) {
       console.error("Fetch error:", error);
     } finally {
@@ -26,33 +36,42 @@ export default function DriveReview() {
   };
 
   const saveComment = async () => {
-    if (!data || !data.movie || !data.movie.tmdb_id) {
-      alert("Brak wybranego filmu.");
-      return;
+  console.log("data:", data);
+  console.log("data.movie:", data?.movie);
+  console.log("data.movie.tmdb_id:", data?.movie?.tmdb_id);
+  if (!data || !data.movie || !data.movie.tmdb_id) {
+    alert("Brak wybranego filmu.");
+    return;
+  }
+  if (!comment.trim()) {
+    alert("Komentarz nie może być pusty.");
+    return;
+  }
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    alert("Musisz być zalogowany, aby dodać komentarz.");
+    return;
+  }
+  try {
+    const response = await fetch(`http://localhost:8000/api/movies/${data.movie.tmdb_id}/comment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ comment }),
+    });
+    if (response.ok) {
+      alert("Komentarz zapisany!");
+      setComment("");
+    } else {
+      const res = await response.json();
+      alert("Błąd zapisu: " + (res.message || response.statusText));
     }
-    if (!comment.trim()) {
-      alert("Komentarz nie może być pusty.");
-      return;
-    }
-    try {
-      const response = await fetch(`http://localhost:8000/api/movies/${data.movie.tmdb_id}/comment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ comment }),
-      });
-      if (response.ok) {
-        alert("Komentarz zapisany!");
-        setComment(""); // Wyczyść pole po zapisaniu
-      } else {
-        const res = await response.json();
-        alert("Błąd zapisu: " + (res.message || response.statusText));
-      }
-    } catch (e) {
-      alert("Błąd połączenia: " + e.message);
-    }
-  };
+  } catch (e) {
+    alert("Błąd połączenia: " + e.message);
+  }
+};
 
 
 
@@ -118,6 +137,16 @@ export default function DriveReview() {
                   </CardContent>
                 </Card>
               </motion.div>
+
+              <div className="comments-section">
+                <h4>Komentarze:</h4>
+                {comments.length === 0 && <p>Brak komentarzy.</p>}
+                <ul>
+                  {comments.map((c, i) => (
+                    <li key={i}>{c.content}</li>
+                  ))}
+                </ul>
+              </div>
 
               <div className="mt-6">
                 <Textarea placeholder="Napisz komentarz..."

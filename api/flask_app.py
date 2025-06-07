@@ -17,9 +17,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
-app.config['JWT_SECRET_KEY'] = 'super-secret'
+# app = Flask(__name__)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+# app.config['JWT_SECRET_KEY'] = 'super-secret'
 
 celery = Celery(__name__)
 
@@ -126,9 +126,40 @@ def create_app() -> Flask:
             return jsonify(access_token=token), 200
         return jsonify(message='Invalid credentials'), 401
 
+    @app.route("/api/movies/<int:tmdb_id>/comments", methods=["GET"])
+    def get_comments(tmdb_id):
+        comments = Comment.query.filter_by(tmdb_id=tmdb_id).all()
+        return jsonify([{"content": c.content} for c in comments])
+
+    @app.route("/api/movies/<int:tmdb_id>/comment", methods=["POST"])
+    @jwt_required()
+    def add_comment(tmdb_id):
+        data = request.get_json()
+        comment_text = data.get("comment")
+        if not comment_text:
+            return jsonify({"message": "Komentarz nie może być pusty."}), 400
+
+        comment = Comment(tmdb_id=tmdb_id, content=comment_text)
+        db.session.add(comment)
+        db.session.commit()
+        return jsonify({"message": "Komentarz zapisany!"}), 201
 
     @app.route('/api/register', methods=['POST'])
     def register():
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        if not email or not password:
+            return jsonify(message='Email and password are required'), 400
+        if User.query.filter_by(username=email).first():
+            return jsonify(message='User already exists'), 400
+        new_user = User(username=email, password=password)
+        db.session.add(new_user)
+        db.session.commit()
+        return jsonify(message='User registered successfully'), 201
+    
+    @app.route('/movies', methods=['POST'])
+    def movie():
         data = request.get_json()
         email = data.get('email')
         password = data.get('password')
@@ -218,6 +249,7 @@ def test_combined(tmdb_id: int):
 
     response_data = {
         "movie": {
+            "tmdb_id": tmdb_id,
             "title": title,
             "release_date": release_date,
             "poster_path": poster_path,
