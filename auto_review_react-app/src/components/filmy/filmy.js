@@ -39,7 +39,7 @@ function Filmy() {
             style={{ flex: 1, border: "2px solid black", background: "white", fontWeight: "bold" }}
             onClick={() => handleGenerate(movie.id)}
           >
-            przycisk gen.
+            Generuj
           </button>
         </div>
       ))}
