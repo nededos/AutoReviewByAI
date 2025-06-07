@@ -163,19 +163,25 @@ def create_app() -> Flask:
         db.session.commit()
         return jsonify(message='User registered successfully'), 201
     
-    @app.route('/movies', methods=['POST'])
-    def movie():
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        if not email or not password:
-            return jsonify(message='Email and password are required'), 400
-        if User.query.filter_by(username=email).first():
-            return jsonify(message='User already exists'), 400
-        new_user = User(username=email, password=password)
-        db.session.add(new_user)
-        db.session.commit()
-        return jsonify(message='User registered successfully'), 201
+    @app.route("/api/movies", methods=["GET"])
+    def popular_movies():
+        key = os.getenv("TMDB_API_KEY")
+        lang = "pl-PL"
+        url = f"https://api.themoviedb.org/3/movie/popular?api_key={key}&language={lang}&page=1"
+        response = requests.get(url, timeout=5)
+        if response.status_code != 200:
+            return jsonify({"error": "Błąd pobierania filmów"}), 500
+        data = response.json()
+        # Dodaj nazwy gatunków do każdego filmu
+        genres_url = f"https://api.themoviedb.org/3/genre/movie/list?api_key={key}&language={lang}"
+        genres_resp = requests.get(genres_url, timeout=5)
+        genres_map = {}
+        if genres_resp.status_code == 200:
+            genres_list = genres_resp.json().get("genres", [])
+            genres_map = {g["id"]: g["name"] for g in genres_list}
+        for movie in data.get("results", []):
+            movie["genre_names"] = [genres_map.get(gid, "") for gid in movie.get("genre_ids", [])]
+        return jsonify(data)
 
     return app
 

@@ -7,7 +7,7 @@ function Filmy() {
 
   useEffect(() => {
     // Pobierz listę popularnych filmów z backendu (proxy do TMDb)
-    fetch("http://localhost:8000/api/movies/popular")
+    fetch("http://localhost:8000/api/movies")
       .then(res => res.json())
       .then(data => setMovies(data.results || []));
   }, []);
