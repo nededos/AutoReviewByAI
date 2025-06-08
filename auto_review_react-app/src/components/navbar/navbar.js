@@ -13,33 +13,23 @@ const NavBar = () => {
   };
 
   return (
-    <div className="container">
+    <div className="navbar-container">
       <nav className="navbar">
         <div className="logo">
-          <Link to="/" className="logo-link">PortScan-Edu</Link>
+          <Link to="/" className="logo-link">
+            <span className="logo-icon">🎬</span>
+            <span className="logo-text">AutoReviewByAI</span>
+          </Link>
         </div>
         <ul className="nav-links">
-          <li><Link to="/">Main Page</Link></li>
-          <li><Link to="/filmy">Filmy</Link></li>
-          <li><Link to="/recenzja">Generuj</Link></li>
+          <li><Link to="/" className="nav-link">Main</Link></li>
+          <li><Link to="/filmy" className="nav-link">Filmy</Link></li>
+          <li><Link to="/recenzja" className="nav-link generuj-btn">Generuj</Link></li>
           {token ? (
-            <>
-              <li><button onClick={handleLogout}>Log Out</button></li>
-            </>
+            <li><button onClick={handleLogout} className="nav-link auth-btn logout-btn">Log Out</button></li>
           ) : (
-            <li><Link to="/login">Login</Link></li>
+            <li><Link to="/login" className="nav-link auth-btn">Log In</Link></li>
           )}
-          <li>
-            <div className="dropdown">
-              <button className="dropbtn">Tools
-                <i className="fa fa-caret-down"></i>
-              </button>
-              {/* <div className="dropdown-content">
-                <Link to="/nmap">nmap</Link>
-                <Link to="/snort">snort</Link>
-              </div> */}
-            </div>
-          </li>
         </ul>
       </nav>
     </div>

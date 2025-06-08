@@ -1,169 +1,211 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { Card, CardContent } from "../ui/card";
-import { Button } from "../ui/button";
-import { Textarea } from "../ui/textarea";
-import { motion } from "framer-motion";
+import { useState } from "react"
+import "./recenzja.css"
 
-export default function DriveReview() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [comment, setComment] = useState("");
-  const [comments, setComments] = useState([]);
+export default function Recenzja() {
+  const [data, setData] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [comment, setComment] = useState("")
+  const [comments, setComments] = useState([])
+  const [commentLoading, setCommentLoading] = useState(false)
 
   const fetchComments = async (tmdb_id) => {
-    const token = localStorage.getItem("access_token");
-    const res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}/comments`, {
-        headers: {
-        "Authorization": `Bearer ${token}`,
-        },
-    });
-    const data = await res.json();
-    setComments(Array.isArray(data) ? data : []);
-  };
-  
-  const fetchReview = async () => {
-    setLoading(true);
+    const token = localStorage.getItem("access_token")
     try {
-      const response = await fetch("http://localhost:8000/api/test-combined/random");
-      const result = await response.json();
-      setData(result);
+      const res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}/comments`, {
+        headers: { "Authorization": `Bearer ${token}` },
+      })
+      const data = await res.json()
+      setComments(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error("Error fetching comments:", error)
+    }
+  }
+
+  const fetchReview = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("http://localhost:8000/api/test-combined/random")
+      const result = await response.json()
+      setData(result)
       if (result.movie?.tmdb_id) {
-        fetchComments(result.movie.tmdb_id);
+        fetchComments(result.movie.tmdb_id)
       }
     } catch (error) {
-      console.error("Fetch error:", error);
+      console.error("Fetch error:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const saveComment = async () => {
-  console.log("data:", data);
-  console.log("data.movie:", data?.movie);
-  console.log("data.movie.tmdb_id:", data?.movie?.tmdb_id);
-  if (!data || !data.movie || !data.movie.tmdb_id) {
-    alert("Brak wybranego filmu.");
-    return;
-  }
-  if (!comment.trim()) {
-    alert("Komentarz nie może być pusty.");
-    return;
-  }
-  const token = localStorage.getItem("access_token");
-  if (!token) {
-    alert("Musisz być zalogowany, aby dodać komentarz.");
-    return;
-  }
-  try {
-    const response = await fetch(`http://localhost:8000/api/movies/${data.movie.tmdb_id}/comment`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ comment }),
-    });
-    if (response.ok) {
-      alert("Komentarz zapisany!");
-      setComment("");
-      fetchComments(data.movie.tmdb_id);
-    } else {
-      const res = await response.json();
-      alert("Błąd zapisu: " + (res.message || response.statusText));
+    if (!data || !data.movie || !data.movie.tmdb_id || !comment.trim()) return
+    
+    setCommentLoading(true)
+    const token = localStorage.getItem("access_token")
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/movies/${data.movie.tmdb_id}/comment`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ comment }),
+      })
+      
+      if (response.ok) {
+        setComment("")
+        fetchComments(data.movie.tmdb_id)
+      }
+    } catch (error) {
+      console.error("Error saving comment:", error)
+    } finally {
+      setCommentLoading(false)
     }
-  } catch (e) {
-    alert("Błąd połączenia: " + e.message);
   }
-};
-
-
-
-  const renderGenres = (genres) => genres.map((g, i) => (
-    <span key={i} className="tag">
-      {g}
-    </span>
-  ));
 
   return (
-    <div className="App">
-      <header>
-        <h1 className="Title">Dzienny generator recenzji filmów z AI</h1>
-        <nav className="NavBar">
-          <a href="/movies">Filmy</a>
-          <a href="/top">Top</a>
-          <a href="/login">Login</a>
-        </nav>
-      </header>
-
-      <div className="GenerateDiv">
-        <section className="GenerateSection">
-          <h2>AI recenzje filmów</h2>
-          <Button onClick={fetchReview} disabled={loading}>
-            {loading ? "Generowanie..." : "Wygeneruj"}
-          </Button>
-        </section>
+    <div className="recenzja-wrapper">
+      <div className="recenzja-background">
+        <div className="gradient-orb orb-1"></div>
+        <div className="gradient-orb orb-2"></div>
+        <div className="gradient-orb orb-3"></div>
       </div>
 
-      {data && (
-        <main className="main-content">
-          <div className="content-wrapper">
-            <div className="ImgDiv">
-              <img
-                src={`https://image.tmdb.org/t/p/w500${data.movie.poster_path}`}
-                alt={data.movie.title}
-                width={400}
-                height={600}
-              />
-              <div className="mt-4 space-y-2 text-sm text-gray-700">
-                <div className="genres">{renderGenres(data.movie.genres)}</div>
-                <p><strong>Ocena TMDB:</strong> {data.movie.rating || "-"}</p>
-                <p><strong>Premiera:</strong> {data.movie.release_date}</p>
-                <p><strong>Tytuł:</strong> {data.movie.title}</p>
-                <p><strong>Reżyser:</strong> {data.movie.directors.join(" | ")}</p>
-                <p><strong>Scenariusz:</strong> {data.movie.writers.join(" | ")}</p>
-                <p><strong>Aktorzy:</strong> {data.movie.actors.join(" | ")}</p>
+      <div className="recenzja-container">
+        <div className="recenzja-header">
+          <h1>Generator Recenzji AI</h1>
+          <p>Wygeneruj losową recenzję filmu za pomocą sztucznej inteligencji</p>
+        </div>
+
+        <div className="generate-section">
+          <button 
+            onClick={fetchReview} 
+            disabled={loading}
+            className="generate-button"
+          >
+            {loading ? (
+              <>
+                <span className="loading-spinner"></span>
+                <span>Generowanie...</span>
+              </>
+            ) : (
+              <>
+                <span>Generuj Recenzję</span>
+                <span className="btn-icon">✨</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {data && (
+          <div className="recenzja-content">
+            <div className="movie-section">
+              <div className="movie-poster">
+                <img
+                  src={`https://image.tmdb.org/t/p/w500${data.movie.poster_path}`}
+                  alt={data.movie.title}
+                />
+              </div>
+              
+              <div className="movie-details">
+                <h2 className="movie-title">{data.movie.title}</h2>
+                
+                <div className="movie-genres">
+                  {data.movie.genres?.map((genre, index) => (
+                    <span key={index} className="genre-tag">
+                      {genre}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="movie-info-grid">
+                  <div className="info-item">
+                    <span className="info-label">Ocena TMDB:</span>
+                    <span className="info-value">
+                      <span className="rating-icon">⭐</span>
+                      {data.movie.rating || "-"}
+                    </span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Premiera:</span>
+                    <span className="info-value">{data.movie.release_date}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Reżyser:</span>
+                    <span className="info-value">{data.movie.directors?.join(", ")}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Scenariusz:</span>
+                    <span className="info-value">{data.movie.writers?.join(", ")}</span>
+                  </div>
+                  <div className="info-item">
+                    <span className="info-label">Aktorzy:</span>
+                    <span className="info-value">{data.movie.actors?.join(", ")}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="ReviewDiv">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-              >
-                <Card>
-                  <CardContent>
-                    <h3>Recenzja:</h3>
-                    <p className="space-y-4">
-                      {data.review}
-                    </p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+            <div className="review-section">
+              <div className="review-card">
+                <div className="review-header">
+                  <h3>Recenzja AI</h3>
+                  <span className="ai-badge">🤖 AI Generated</span>
+                </div>
+                <div className="review-content">
+                  {data.review}
+                </div>
+              </div>
 
               <div className="comments-section">
-                <h4>Komentarze:</h4>
-                {comments.length === 0 && <p>Brak komentarzy.</p>}
-                <ul>
-                    {comments.map((c, i) => (
-                        <li key={i}>
-                        <strong>{c.username}:</strong> {c.content}
-                        </li>
-                    ))}
-                </ul>
-                <Textarea placeholder="Napisz komentarz..."
-                  value={comment}
-                  onChange={e => setComment(e.target.value)} />
-                <div className="icons">
+                <h4>Komentarze</h4>
+                
+                <div className="comment-form">
+                  <textarea
+                    placeholder="Napisz swój komentarz..."
+                    value={comment}
+                    onChange={e => setComment(e.target.value)}
+                    className="comment-input"
+                  />
+                  <button 
+                    onClick={saveComment} 
+                    disabled={commentLoading || !comment.trim()}
+                    className="comment-submit"
+                  >
+                    {commentLoading ? (
+                      <>
+                        <span className="loading-spinner-small"></span>
+                        Dodawanie...
+                      </>
+                    ) : (
+                      <>
+                        <span>Dodaj komentarz</span>
+                        <span className="btn-icon">💬</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-                <Button className="mt-2" onClick={saveComment} variant="outline"> Dodaj komentarz </Button>
+
+                <div className="comments-list">
+                  {comments.length === 0 ? (
+                    <p className="no-comments">Brak komentarzy. Bądź pierwszy!</p>
+                  ) : (
+                    comments.map((c, i) => (
+                      <div key={i} className="comment-item">
+                        <div className="comment-author">{c.username}</div>
+                        <div className="comment-content">{c.content}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </main>
-      )}
+        )}
+      </div>
     </div>
-  );
+  )
 }
