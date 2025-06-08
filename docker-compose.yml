@@ -24,3 +24,15 @@ services:
     image: redis:7
     ports:
       - "6379:6379"
+
+  celery:
+    build: ./api
+    command: celery -A flask_app.celery worker --loglevel=info
+    depends_on:
+      - backend
+      - redis
+    volumes:
+      - ./api:/app
+    env_file:
+    - ./api/.env
+

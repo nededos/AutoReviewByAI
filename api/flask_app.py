@@ -50,12 +50,14 @@ def make_celery(app: Flask) -> Celery:
 def create_app() -> Flask:
     app = Flask(__name__)
 
+    CORS(app, resources={r"/*": {"origins": "*"}})
+
     app.config.update(
         JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "super-secret-key"),
         SQLALCHEMY_DATABASE_URI=os.getenv("DATABASE_URL", "sqlite:///db.sqlite3"),
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        CELERY_BROKER_URL=os.getenv("CELERY_BROKER_URL", "redis://localhost:6379/0"),
-        CELERY_RESULT_BACKEND=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0"),
+        CELERY_BROKER_URL=os.getenv("CELERY_BROKER_URL", "redis://redis:6379/0"),
+        CELERY_RESULT_BACKEND=os.getenv("CELERY_RESULT_BACKEND", "redis://redis:6379/0"),
         TMDB_API_KEY=os.getenv("TMDB_API_KEY"),
         OPENAI_API_KEY=os.getenv("OPENAI_API_KEY"),
     )
@@ -65,7 +67,6 @@ def create_app() -> Flask:
 
     openai.api_key = app.config["OPENAI_API_KEY"]
 
-    CORS(app, resources={r"/*": {"origins": "*"}})
     db.init_app(app)
     global celerys
     celery = make_celery(app)
@@ -182,6 +183,25 @@ def create_app() -> Flask:
         for movie in data.get("results", []):
             movie["genre_names"] = [genres_map.get(gid, "") for gid in movie.get("genre_ids", [])]
         return jsonify(data)
+    
+    @app.route("/api/movies/<int:tmdb_id>/handle_review", methods=["POST"])
+    def handle_review(tmdb_id: int):
+        movie = Movie.query.filter_by(tmdb_id=tmdb_id).first()
+        if not movie:
+            movie_data = fetch_tmdb_info(tmdb_id)
+            if not movie_data:
+                abort(404)
+            try:
+                movie = Movie.from_tmdb(movie_data)
+                db.session.add(movie)
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+                movie = Movie.query.filter_by(tmdb_id=tmdb_id).first()
+                if not movie:
+                    abort(500, "Could not add or retrieve movie")
+        generate_review.delay(movie.id)
+        return {"queued": True}
 
     return app
 

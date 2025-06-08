@@ -13,9 +13,8 @@ function Filmy() {
   }, []);
 
   const handleGenerate = (tmdb_id) => {
-    // Przekieruj do recenzji z danym tmdb_id
-    navigate(`/recenzja?tmdb_id=${tmdb_id}`);
-  };
+  navigate(`/film?tmdb_id=${tmdb_id}`);
+};
 
   return (
     <div style={{ padding: 32 }}>

@@ -10,8 +10,10 @@ import Register from './components/register/register';
 import './components/register/register.css';
 import Recenzja from './components/recenzja/recenzja';
 import './components/recenzja/recenzja.css';
-// import Filmy from './components/filmy/filmy'; 
-// import './components/filmy/filmy.css';
+import Filmy from './components/filmy/filmy'; 
+import './components/filmy/filmy.css';
+import FilmReview from './components/filmreview/filmreview';
+import './components/filmreview/filmreview.css';
 
 function App() {
   return (
@@ -21,8 +23,9 @@ function App() {
         <Route path="/" element={<Main />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        {/* <Route path="/filmy" element={<Filmy />} /> */}
+        <Route path="/filmy" element={<Filmy />} />
         <Route path="/recenzja" element={<Recenzja />} />
+        <Route path="/film" element={<FilmReview />} />
       </Routes>
     </Router>
   );
