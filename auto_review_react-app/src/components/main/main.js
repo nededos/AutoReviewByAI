@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import "./main.css"
 
 function Main() {
@@ -48,20 +48,24 @@ function Main() {
 
         <div className="hero-features">
           <div className="feature-card">
-            <div className="feature-icon">🎭</div>
-            <h3>Losowe Recenzje</h3>
-            <p>Generuj recenzje losowych filmów i odkrywaj nowe gatunki</p>
+            <Link to="/recenzja">
+              <div className="feature-icon">🎭</div>
+              <h3>Losowe Recenzje</h3>
+              <p>Generuj recenzje losowych filmów i odkrywaj nowe gatunki</p>
+            </Link>
           </div>
           <div className="feature-card">
-            <div className="feature-icon">🎬</div>
-            <h3>Popularne Filmy</h3>
-            <p>Przeglądaj listę popularnych filmów z AI recenzjami</p>
+            <Link to="/filmy">
+              <div className="feature-icon">🎬</div>
+              <h3>Popularne Filmy</h3>
+              <p>Przeglądaj listę popularnych filmów z AI recenzjami</p>
+            </Link>
           </div>
-          <div className="feature-card">
+          {/* <div className="feature-card">
             <div className="feature-icon">🤖</div>
             <h3>AI Analiza</h3>
             <p>Inteligentne analizy fabuły, aktorstwa i reżyserii</p>
-          </div>
+          </div> */}
         </div>
 
         <div className="hero-actions">
