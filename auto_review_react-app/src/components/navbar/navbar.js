@@ -22,15 +22,31 @@ const NavBar = () => {
           </Link>
         </div>
         <ul className="nav-links">
-          <li><Link to="/" className="nav-link">Main</Link></li>
-          <li><Link to="/filmy" className="nav-link">Filmy</Link></li>
-          <li><Link to="/recenzja" className="nav-link generuj-btn">Generuj</Link></li>
-          {token ? (
-            <li><button onClick={handleLogout} className="nav-link auth-btn logout-btn">Log Out</button></li>
-          ) : (
-            <li><Link to="/login" className="nav-link auth-btn">Log In</Link></li>
-          )}
-        </ul>
+            <li>
+              <button onClick={() => navigate("/")} className="nav-link auth-btn">
+                Main
+              </button>
+            </li>
+            <li>
+              <button onClick={() => navigate("/filmy")} className="nav-link auth-btn">
+                Filmy
+              </button>
+            </li>
+            <li>
+              <Link to="/recenzja" className="nav-link generuj-btn">Generuj</Link>
+            </li>
+            {token ? (
+              <li>
+                <button onClick={handleLogout} className="nav-link auth-btn logout-btn">
+                  Log Out
+                </button>
+              </li>
+            ) : (
+              <li>
+                <Link to="/login" className="nav-link auth-btn">Log In</Link>
+              </li>
+            )}
+          </ul>
       </nav>
     </div>
   );

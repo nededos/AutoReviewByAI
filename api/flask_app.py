@@ -202,6 +202,21 @@ def create_app() -> Flask:
                     abort(500, "Could not add or retrieve movie")
         generate_review.delay(movie.id)
         return {"queued": True}
+    @app.route("/api/tmdb-movie/<int:tmdb_id>", methods=["GET"])
+    def get_tmdb_movie(tmdb_id):
+        movie_data = fetch_tmdb_info(tmdb_id)
+        if not movie_data:
+            return jsonify({"error": "Movie not found on TMDb"}), 404
+        return jsonify({
+            "title": movie_data.get("title"),
+            "release_date": movie_data.get("release_date"),
+            "poster_path": movie_data.get("poster_path"),
+            "genres": [g["name"] for g in movie_data.get("genres", [])],
+            "directors": movie_data.get("directors", []),
+            "writers": movie_data.get("writers", []),
+            "actors": movie_data.get("actors", []),
+            "rating": movie_data.get("vote_average"),
+        })
 
     return app
 

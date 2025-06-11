@@ -17,33 +17,53 @@ export default function FilmReview() {
   const [comments, setComments] = useState([])
   const [commentLoading, setCommentLoading] = useState(false)
 
-  useEffect(() => {
-    if (!tmdb_id) return
+useEffect(() => {
+  if (!tmdb_id) return;
 
-    const generateAndFetch = async () => {
-      setLoading(true)
-      await fetch(`http://localhost:8000/api/movies/${tmdb_id}/handle_review`, { method: "POST" })
-      pollUntilReviewExists()
-    }
+  const fetchAndWaitForReview = async () => {
+    setLoading(true);
 
-    const pollUntilReviewExists = async () => {
-      for (let i = 0; i < 10; i++) {
-        const res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}`)
-        const movieData = await res.json()
-        if (movieData.reviews && movieData.reviews.length > 0) {
-          setData(movieData)
-          setLoading(false)
-          fetchComments(tmdb_id)
-          return
+    // Проверяем, есть ли фильм и рецензия в базе
+    let res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}`);
+    let dbData = res.ok ? await res.json() : null;
+
+    // Если нет рецензии — инициируем генерацию и ждем появления
+    if (!dbData || !dbData.reviews || dbData.reviews.length === 0) {
+      await fetch(`http://localhost:8000/api/movies/${tmdb_id}/handle_review`, { method: "POST" });
+
+      // Polling: ждем появления рецензии
+      for (let i = 0; i < 15; i++) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        res = await fetch(`http://localhost:8000/api/movies/${tmdb_id}`);
+        if (res.ok) {
+          dbData = await res.json();
+          if (dbData.reviews && dbData.reviews.length > 0) break;
         }
-        await new Promise(resolve => setTimeout(resolve, 3000))
       }
-      setData(null)
-      setLoading(false)
     }
 
-    generateAndFetch()
-  }, [tmdb_id])
+    // Если рецензия так и не появилась — показываем ошибку
+    if (!dbData || !dbData.reviews || dbData.reviews.length === 0) {
+      setData(null);
+      setLoading(false);
+      return;
+    }
+
+    // Получаем подробную инфу из TMDb
+    const tmdbRes = await fetch(`http://localhost:8000/api/tmdb-movie/${tmdb_id}`);
+    const tmdbData = tmdbRes.ok ? await tmdbRes.json() : {};
+
+    setData({
+      ...dbData,
+      ...tmdbData,
+      reviews: dbData.reviews || [],
+    });
+    setLoading(false);
+    fetchComments(tmdb_id);
+  };
+
+  fetchAndWaitForReview();
+}, [tmdb_id]);
 
   const fetchComments = async (tmdb_id) => {
     const token = localStorage.getItem("access_token")

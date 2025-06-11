@@ -111,9 +111,19 @@
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
   transition: left 0.5s;
 }
+button.nav-link::before {
+  display: none !important;
+}
 
-.nav-link:hover::before {
-  left: 100%;
+.nav-links li {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+.nav-link {
+  position: relative;
+  z-index: 2;
 }
 
 .nav-link:hover {
